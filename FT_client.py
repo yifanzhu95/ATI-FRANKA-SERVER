@@ -9,12 +9,23 @@ dirname = os.path.dirname(__file__)
 class FTClient:
     def __init__(self, address = 'http://127.0.0.1:8080'):
         self.s = ServerProxy(address)
-        self.shut_down = False
+        #self.shut_down = False
 
-    def test(self):
-        return self.s.test()
+    def zero_ft_sensor(self):
+        self.s.zero_sensor()
 
+    def start_ft_sensor(self):
+        self.s.start()
+
+    def read_ft_sensor(self):
+        return self.s.read()
+
+    def shutdown_ft_sensor(self):
+        self.s.shutdown()
 
 if __name__=="__main__":
     ft_arm_driver = FTClient('http://localhost:8080')
-    print(ft_arm_driver.test())
+    ft_arm_driver.zero_ft_sensor()
+    ft_arm_driver.start_ft_sensor()
+    print(ft_arm_driver.read_ft_sensor())
+    ft_arm_driver.shutdown_ft_sensor()

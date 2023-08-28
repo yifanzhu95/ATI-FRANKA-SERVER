@@ -44,9 +44,6 @@ def shutdown_ft_sensor():
     global ft_sensor
     ft_sensor.shutdown()
 
-@xmlrpcMethod("test")
-def test():
-    return 1
 
 
 print('Server Created')
