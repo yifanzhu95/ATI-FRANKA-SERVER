@@ -1,10 +1,10 @@
 from xmlrpc.server import SimpleXMLRPCServer
 from ATI_FT import ATIDriver
 
-ip_address = 'localhost'
+ip_address = '192.168.0.109'
 port = 8080
 
-server = SimpleXMLRPCServer((ip_address,port), logRequests=False)
+server = SimpleXMLRPCServer((ip_address,port), logRequests=False, allow_none=True)
 print(f"Listening on port {port}...")
 server.register_introspection_functions()
 

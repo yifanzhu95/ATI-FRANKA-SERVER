@@ -29,7 +29,7 @@ class ATIDriver:
 
 
     def start(self):
-        controlThread = threading.Thread(target = self._controlLoop)
+        controlThread = threading.Thread(target = self._loop)
         self.shut_down_flag = False
         controlThread.start()
         print("ATIDriver:started")
@@ -60,7 +60,7 @@ class ATIDriver:
         print('ATIDriver: Exiting')
 
     def read(self):
-        return copy.copy(self.reading)
+        return copy.copy(self.reading.tolist())
 
     def shutdown(self):
         self._loopLock.acquire()
