@@ -24,10 +24,11 @@ class FTClient:
         self.s.shutdown_ft_sensor()
 
 if __name__=="__main__":
-    ft_arm_driver = FTClient('http://127.0.0.1:8080')
-    ft_arm_driver.zero_ft_sensor()
-    ft_arm_driver.start_ft_sensor()
+    ft_driver = FTClient('http://127.0.0.1:8080')
+    ft_driver.zero_ft_sensor()
+    ft_driver.start_ft_sensor()
     for i in range(100):
         start_time = time.time()
+        print(ft_driver.read_ft_sensor())
         time.sleep(0.1)
-    ft_arm_driver.shutdown_ft_sensor()
+    ft_driver.shutdown_ft_sensor()
