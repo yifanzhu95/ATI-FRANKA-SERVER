@@ -6,10 +6,10 @@ from klampt import WorldModel,RobotModel
 from klampt.model import ik,collide
 from klampt.math import so3, se3, vectorops as vo
 
-ip_address = 'localhost'
+ip_address = '172.16.0.1'
 port = 8080
 
-server = SimpleXMLRPCServer((ip_address,port), logRequests=False)
+server = SimpleXMLRPCServer((ip_address,port), logRequests=False, allow_none=True)
 print(f"Listening on port {port}...")
 server.register_introspection_functions()
 
@@ -30,13 +30,19 @@ world.readFile(world_fn)
 robot_model = world.robot(0)
 collider = collide.WorldCollider(world)
 collision_checker = GlobalCollisionHelper(robot_model, collider)
-params = {'address': "172.16.0.2"} ## TBD, joint stiffness can also be set here 
-# 'impedance', [3000, 3000, 3000, 2500, 2500, 2000, 2000] ## default
+params = {'address': "172.16.0.2",
+        'impedance': [3000,3000,3000,2500,2500,2000,2000], #[15000, 15000, 15000, 12500, 12500, 10000, 0000],
+        'payload': 1,
+        'gravity_center': [0.05, 0, 0]}
+        #[3000, 3000, 3000, 2500, 2500, 2000, 2000] ## default
 
 # controller instance
 global controller
 controller = FrankaController(name = 'Franka', robot_model = robot_model, EE_link = EE_link, \
     collision_checker = collision_checker, params = params)
+
+control_params = {'kp':[600.0]*4+ [320.]*3, \
+                  'kd':[50.0]*4 + [12.5,5.0,5.]}
 
 # Franka interface
 @xmlrpcMethod("initialize")
@@ -77,7 +83,7 @@ def get_EE_transform(tool_center):
 @xmlrpcMethod("get_EE_velocity")
 def get_EE_velocity():
     global controller
-    return controller.get_EE_velocity()
+    return controller.get_EE_velocity().tolist()
 
 @xmlrpcMethod("get_EE_wrench")
 def get_EE_wrench():
@@ -86,19 +92,18 @@ def get_EE_wrench():
 
 @xmlrpcMethod("set_joint_config")
 def set_joint_config(q):
-    global controller
-    controller.set_joint_config(q, {})
+    global controller, control_params
+    controller.set_joint_config(q, control_params)
 
 @xmlrpcMethod("set_EE_transform")
 def set_EE_transform(T):
-    global controller
-    controller.set_EE_transform(T, {})
+    global controller, control_params
+    controller.set_EE_transform(T, control_params)
 
 @xmlrpcMethod("set_EE_velocity")
 def set_EE_velocity(v):
-    global controller
-    controller.set_EE_velocity(v, {})
-
+    global controller, control_params
+    controller.set_EE_velocity(v, control_params)
     
 
 print('Server Created')

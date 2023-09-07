@@ -1,7 +1,7 @@
 from xmlrpc.server import SimpleXMLRPCServer
 from ATI_FT import ATIDriver
 
-ip_address = '192.168.0.109'
+ip_address = '172.16.0.1' # '192.168.0.109'
 port = 8080
 
 server = SimpleXMLRPCServer((ip_address,port), logRequests=False, allow_none=True)
