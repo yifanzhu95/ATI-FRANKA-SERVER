@@ -28,7 +28,7 @@ class ATIDriver:
         self.task.ai_channels.add_ai_voltage_chan("Dev1/ai3")
         self.task.ai_channels.add_ai_voltage_chan("Dev1/ai4")
         self.task.ai_channels.add_ai_voltage_chan("Dev1/ai5")
-
+        self.task.timing.cfg_samp_clk_timing(hz, sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS)
 
     def start(self):
         controlThread = threading.Thread(target = self._loop)
@@ -57,8 +57,10 @@ class ATIDriver:
                 data[itemNum] = data[itemNum] - self.offset[itemNum]
             self.reading = np.transpose(np.matmul(calmat, np.transpose(data)))
             self._loopLock.release()
-            time.sleep(1./self.hz)
+            time.sleep(0.5*1./self.hz)
         print('ATIDriver: Exiting')
+        self.task.stop()
+        self.task.close()
 
     def read(self):
         return copy.copy(self.reading.tolist())
@@ -70,15 +72,8 @@ class ATIDriver:
 
 
 
-# Apply the filter
-def butter_lowpass_filter(data, cutoff, fs, order):
-    b, a = butter_lowpass(cutoff, fs, order)
-    y = filtfilt(b, a, data)
-    return y
-
-
 class ATIDriverFilter:
-    def __init__(self, hz = 2000., cutoff = 100., history_length = 100) -> None:
+    def __init__(self, hz = 2000., cutoff = 100., history_length = 10) -> None:
         self.hz = hz 
         self.offset = np.zeros(6)
         self.reading = np.zeros(6)
@@ -90,7 +85,7 @@ class ATIDriverFilter:
         self.b, self.a = butter(4, normal_cutoff, btype='low', analog=False)
 
         #history
-        self.history = deque(maxlength=history_length)
+        self.history = deque(maxlen=history_length)
         self.history_length = history_length
         #Daq board
         self.task = nidaqmx.Task()
@@ -100,6 +95,7 @@ class ATIDriverFilter:
         self.task.ai_channels.add_ai_voltage_chan("Dev1/ai3")
         self.task.ai_channels.add_ai_voltage_chan("Dev1/ai4")
         self.task.ai_channels.add_ai_voltage_chan("Dev1/ai5")
+        self.task.timing.cfg_samp_clk_timing(hz, sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS)
 
 
     def start(self):
@@ -117,14 +113,15 @@ class ATIDriverFilter:
                 data[itemNum] = data[itemNum] - self.offset[itemNum]
             self.reading = np.transpose(np.matmul(calmat, np.transpose(data)))
             self.history.append(self.reading)
-            time.sleep(1./self.hz)
+            time.sleep(0.5*1./self.hz)
 
-    def zero_sensor(self, N = 20):
+    def zero_sensor(self, N = 50):
         test_total = self.task.read()
         for testNum in range(N):
             test = self.task.read()
             for item in range(len(test_total)):
                 test_total[item] = test_total[item]+test[item]
+            time.sleep(0.5/self.hz)
         zeros = [x/(N+1) for x in test_total]
         self.offset = np.array(zeros)
 
@@ -133,20 +130,33 @@ class ATIDriverFilter:
         in each loop,states are updated and new commands are issued
         """
         while not self.shut_down_flag:
-            self._loopLock.acquire()
-            data = np.array(self.task.read())
-            for itemNum in range(len(data)):
-                data[itemNum] = data[itemNum] - self.offset[itemNum]
+            available_samples = self.task.in_stream.avail_samp_per_chan 
+            if available_samples > 5:
+                data = np.array(self.task.read(available_samples))[:,-1]
+            else:
+                data = np.array(self.task.read())
+            data -= self.offset
             self.reading = np.transpose(np.matmul(calmat, np.transpose(data)))
             self.history.append(self.reading)
-            self._loopLock.release()
-            time.sleep(1./self.hz)
+            #time.sleep(1./self.hz)
         
         print('ATIDriver: Exiting')
+        self.task.stop()
+        self.task.close()
 
     def read(self):
         #return copy.copy(self.reading.tolist())
-        return filtfilt(self.b, self.a, np.array(self.history).T)[:,-1].tolist(), self.history[-1].tolist()
+        # start_time = time.time()
+        # filtered = filtfilt(self.b, self.a, np.array(self.history).T)[:,-1].tolist()
+        # filtered = filtfilt(self.b, self.a, np.array(self.history)[:,2])[-1]
+        # filtered = [0,0,filtered, 0,0,0]
+        #print(f'elapsed time: {time.time() - start_time}')
+        # self._loopLock.acquire()
+        filtered = np.average(np.array(self.history), axis = 0).tolist()
+        # self._loopLock.release()
+        # available_samples = self.task.in_stream.avail_samp_per_chan
+        # print(f"Samples available in buffer: {available_samples}")
+        return filtered, self.history[-1].tolist()
 
     def shutdown(self):
         self._loopLock.acquire()
