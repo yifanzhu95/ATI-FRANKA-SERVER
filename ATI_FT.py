@@ -56,7 +56,6 @@ class ATIDriver:
             self.reading = np.transpose(np.matmul(calmat, np.transpose(data)))
             self._loopLock.release()
             time.sleep(1./self.hz)
-        
         print('ATIDriver: Exiting')
 
     def read(self):

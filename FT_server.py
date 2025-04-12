@@ -1,8 +1,8 @@
 from xmlrpc.server import SimpleXMLRPCServer
 from ATI_FT import ATIDriver
 
-ip_address = '172.16.0.1' # '192.168.0.109'
-port = 8080
+ip_address = '192.168.0.102' #'192.168.9.118' ##   #  '192.168.0.109'
+port = 80
 
 server = SimpleXMLRPCServer((ip_address,port), logRequests=False, allow_none=True)
 print(f"Listening on port {port}...")
@@ -14,7 +14,7 @@ def xmlrpcMethod(name):
     """
     def register_wrapper(f):
         server.register_function(f, name)
-        return f
+        return 
     return register_wrapper
 
 ## Franka Driver

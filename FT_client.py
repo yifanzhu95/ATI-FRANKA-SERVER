@@ -24,7 +24,7 @@ class FTClient:
         self.s.shutdown_ft_sensor()
 
 if __name__=="__main__":
-    ft_driver = FTClient('http://172.16.0.64:8080')
+    ft_driver = FTClient('http://192.168.0.102:80')#'192.168.0.103'
     ft_driver.zero_ft_sensor()
     ft_driver.start_ft_sensor()
     for i in range(100):
