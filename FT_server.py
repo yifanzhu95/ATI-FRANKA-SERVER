@@ -1,7 +1,7 @@
 from xmlrpc.server import SimpleXMLRPCServer
-from ATI_FT import ATIDriver
+from ATI_FT import ATIDriver, ATIDriverFilter
 
-ip_address = '192.168.0.102' #'192.168.9.118' ##   #  '192.168.0.109'
+ip_address = '192.168.0.105' #'192.168.9.118' ##   #  '192.168.0.109'
 port = 80
 
 server = SimpleXMLRPCServer((ip_address,port), logRequests=False, allow_none=True)
@@ -21,7 +21,7 @@ def xmlrpcMethod(name):
 
 # ATI Driver
 global ft_sensor
-ft_sensor = ATIDriver()
+ft_sensor =ATIDriverFilter(hz=1000) # ATIDriver()
 
 # ATI functions 
 @xmlrpcMethod("zero_ft_sensor")

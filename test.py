@@ -23,8 +23,9 @@ import numpy as np
 ## filtered version
 hz = 1000
 ft_driver = ATIDriverFilter(hz=hz)
-ft_driver.zero_sensor()
 ft_driver.start()
+ft_driver.zero_sensor()
+
 filtered_fts = []
 raw_fts = []
 start_time = time.time()
@@ -36,7 +37,7 @@ for i in range(4000):
     
     t.append(time.time() - start_time)
     # print(f'elapsted_time {1000*(time.time() - start_time)}')
-    #ssprint(filtered[2])
+    print(filtered[2])
     time.sleep(0.1/hz)
     
 
